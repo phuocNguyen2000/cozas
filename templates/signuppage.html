@@ -2,21 +2,29 @@
 
 {% block content %}
 <div class="signinform">
-  <h1>Service Login Form</h1>
+  <h1>Service Sign Up Form</h1>
   <!-- container -->
   <div class="container">
       <!-- main content -->
       <div class="w3l-form-info">
           <div class="w3_info">
-              <h2>Login</h2>
+              <h2>Sign Up</h2>
               <form action="/signup" method="post">
+                <div class="input-group">
+                    <span><i class="fas fa-user" aria-hidden="true"></i></span>
+                    <input type="text" placeholder="First Name" name="fname" required="">
+                </div>
+                <div class="input-group">
+                    <span><i class="fas fa-user" aria-hidden="true"></i></span>
+                    <input type="text" placeholder="Last Name" name="lname" required="">
+                </div>
                   <div class="input-group">
                       <span><i class="fas fa-user" aria-hidden="true"></i></span>
-                      <input type="email" name="email" placeholder="Username or Email" required="">
+                      <input type="email" placeholder="Username or Email" name="email" required="">
                   </div>
                   <div class="input-group">
                       <span><i class="fas fa-key" aria-hidden="true"></i></span>
-                      <input name="password" type="Password" placeholder="Password" required="">
+                      <input type="Password" placeholder="Password" name="password"  required="">
                   </div>
                   <div class="form-row bottom">
                       <div class="form-check">
@@ -25,7 +33,7 @@
                       </div>
                       <a href="#url" class="forgot">Forgot password?</a>
                   </div>
-                  <button class="btn btn-primary btn-block" type="submit">Login</button>
+                  <button class="btn btn-primary btn-block" type="submit">Sign Up</button>
               </form>
               <p class="continue"><span>or Login with</span></p>
               <div class="social-login">
@@ -46,7 +54,6 @@
                       </div>
                   </a>
               </div>
-              <p class="account">Don't have an account? <a href="/signup">Sign up</a></p>
           </div>
       </div>
       <!-- //main content -->

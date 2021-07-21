@@ -676,7 +676,7 @@
 				{%if productscart%}
 				{%for p in productscart%}
 				<li class="header-cart-item flex-w flex-t m-b-12">
-					<form name="removeform" action="/remove-from-cart/{{p['index']}}">
+					<form name="removeform" action="/remove-from-cart/{{p['index']}}" method="POST">
 						<div  onClick="document.forms['removeform'].submit();" class="header-cart-item-img">
 							<img src="{{ p['image']}}" alt="IMG">
 						</div>
@@ -701,7 +701,7 @@
 				</div>
 
 				<div class="header-cart-buttons flex-w w-full">
-					<a href="shoping-cart.html"
+					<a href="{{url_for('cart')}}"
 						class="flex-c-m stext-101 cl0 size-107 bg3 bor2 hov-btn3 p-lr-15 trans-04 m-r-8 m-b-10">
 						View Cart
 					</a>

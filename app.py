@@ -188,14 +188,41 @@ def index():
     # session['cart'] = []
     if 'cart' not in session:
         session['cart'] = []
+    if 'user' not in session:
+        session['user'] =None
+    if session['user']:
+        user = User.query.filter_by(email=session['user']).first()
+
     productscart, grand_total, grand_total_plus_shipping, quantity_total = handle_cart()
     products = Product.query.all()
     categories = Category.query.all()
     a=[(i.id,i.name)  for i in categories]
     form_cart = AddToCart()
 
+    if session['user']:
+        user = User.query.filter_by(email=session['user']).first()
+        return render_template('index.html',user=user, products=products,form_cart=form_cart,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
+    else:
 
-    return render_template('index.html', products=products,form_cart=form_cart,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
+        return render_template('index.html', products=products,form_cart=form_cart,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
+
+@app.route('/signin', methods=['GET', 'POST'])
+def signin():
+   
+    return render_template('signinpage.html')
+@app.route('/signup' ,methods=['GET', 'POST'])
+def signup():
+    if request.method=="POST":
+        fname=request.form['fname']
+        lname=request.form['lname']
+        email=request.form['email']
+        password=request.form['password']
+        new_user=User(first_name=fname,last_name=lname,email=email,password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        session['user']=email
+        return redirect(url_for('index'))
+    return render_template('signuppage.html')
 
 @app.route('/product/<id>')
 def product(id):
@@ -273,7 +300,7 @@ def checkout():
 
         return redirect(url_for('index'))
 
-    return render_template('checkout.html', form=form, grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
+    return render_template('checkout.html', form=form,products=products, grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
 
 @app.route('/admin')
 def admin():
