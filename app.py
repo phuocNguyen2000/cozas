@@ -42,7 +42,8 @@ class Product(db.Model):
     orders = db.relationship('Order_Item', backref='product', lazy=True)
     sizes = db.relationship('Size', secondary='product_size')
     def set_stock(self,size_id,quantity):
-        pz=ProductSize.query.filter(ProductSize.product_id == self.id,ProductSize.size_id == size_id)
+        pz=db.session.query(ProductSize).filter_by(product_id =self.id,size_id=size_id).first() 
+        print(pz)
         pz.stock=pz.stock+quantity
         db.session.commit()
     def get_productRe(self):
@@ -65,6 +66,8 @@ class Product(db.Model):
         return db.session.query(db.func.sum(ProductSize.stock)).filter(ProductSize.product_id == self.id).scalar()
     def get_stock_by_size(self,size_id):
         return db.session.query(db.func.sum(ProductSize.stock)).filter(ProductSize.product_id == self.id,ProductSize.size_id == size_id).scalar()
+    def __repr__(self):
+        return  '<product {} {} , {}>'.format(self.name,self.price,self.image)
         
 class ProductSize(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'),primary_key=True)
@@ -117,6 +120,7 @@ class Order_Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'))
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
+    size=db.Column(db.String(20))
     quantity = db.Column(db.Integer)
 class User(db.Model):
     user_id = db.Column(db.Integer,Sequence('user_id_seq'),primary_key=True)
@@ -202,10 +206,10 @@ def index():
 
     if session['user']:
         user = User.query.filter_by(email=session['user']).first()
-        return render_template('index.html',user=user, products=products,form_cart=form_cart,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
+        return render_template('index.html',user=user,categories=categories, products=products,form_cart=form_cart,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
     else:
 
-        return render_template('index.html', products=products,form_cart=form_cart,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
+        return render_template('index.html', products=products,categories=categories,form_cart=form_cart,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
 
 @app.route('/signIn', methods=['GET', 'POST'])
 def signin():
@@ -299,34 +303,40 @@ def remove_from_cart(index):
 
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
-    form = Checkout()
+    uemail=session['user']
+    if uemail:
+        user = User.query.filter_by(email=uemail).first()
+        form = Checkout()
+        products, grand_total, grand_total_plus_shipping, quantity_total = handle_cart()
 
-    products, grand_total, grand_total_plus_shipping, quantity_total = handle_cart()
+        if form.validate_on_submit():
 
-    if form.validate_on_submit():
+            order = Order()
+            form.populate_obj(order)
+            order.reference = ''.join([random.choice('ABCDE') for _ in range(5)])
+            order.status = 'PENDING'
+            order.user=user
+            for product in products:
+                order_item = Order_Item(quantity=product['quantity'], product_id=product['id'],size=product['size'])
+                order.items.append(order_item)
+                size= Size.query.filter_by(name=product['size']).first()
+                p= Product.query.filter_by(id=product['id']).first()
+                print("p",p.id)
+                print("size",size.id)
+                p.set_stock(size_id=size.id,quantity= - product['quantity'])
+                
+            db.session.add(order)
+            db.session.commit()
 
-        order = Order()
-        form.populate_obj(order)
-        order.reference = ''.join([random.choice('ABCDE') for _ in range(5)])
-        order.status = 'PENDING'
+            session['cart'] = []
+            session.modified = True
 
-        for product in products:
-            order_item = Order_Item(quantity=product['quantity'], product_id=product['id'])
-            order.items.append(order_item)
-            size= Size.query.filter_by(name=product['size']).first()
-            p= Product.query.filter_by(id=product['id']).first()
-            p.set_stock(size_id=size.id,quantity= - product['quantity'])
-            
+            return redirect(url_for('index'))
 
-        db.session.add(order)
-        db.session.commit()
+        return render_template('checkout.html', form=form,products=products, grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
+    else:
+        return redirect(url_for('signin'))
 
-        session['cart'] = []
-        session.modified = True
-
-        return redirect(url_for('index'))
-
-    return render_template('checkout.html', form=form,products=products, grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
 
 @app.route('/admin')
 def admin():
@@ -352,52 +362,79 @@ def permistion_denied(e):
 
 @app.route('/admin/add', methods=['GET', 'POST'])
 def add():
-    form = AddProduct()
-    categories=Category.query.all()
-    sizes=Size.query.all()
+    uemail=session['user']
+    if uemail:
+        user = User.query.filter_by(email=uemail).first()
+        form = AddProduct()
+        if user.typea=="admin":
+            categories=Category.query.all()
+            sizes=Size.query.all()
     
-    a=[(i.id,i.name)  for i in categories]
+            a=[(i.id,i.name)  for i in categories]
     
-    c=[(i.id,i.name)  for i in sizes]
+            c=[(i.id,i.name)  for i in sizes]
 
-    form.categories.choices=a
+            form.categories.choices=a
    
-    form.sizes.choices=c
-    print(form.sizes.choices[0])
+            form.sizes.choices=c
+            print(form.sizes.choices[0])
 
-    if form.validate_on_submit():
-        image_url = photos.url(photos.save(form.image.data))
-        print(image_url)
-        g=[]
-        l=[]
-        
-        for c in categories:
-            for i in form.categories.data:
-                if c.id == i:
-                    g.append(c) 
-        new_product = Product(name=form.name.data, price=form.price.data,categories=g,sizes=sizes, description=form.description.data, image=image_url)
-        
-        db.session.add(new_product)
-        db.session.commit()
-        for s in sizes:
-            pz= ProductSize.query.filter_by(product_id=new_product.id,size_id=s.id).first()
-            pz.stock=request.form[s.name]
-            db.session.commit()
-        return redirect(url_for('admin'))
+            if form.validate_on_submit():
+                image_url = photos.url(photos.save(form.image.data))
+                print(image_url)
+                g=[]
+                l=[]
+                
+                for c in categories:
+                    for i in form.categories.data:
+                        if c.id == i:
+                            g.append(c) 
+                new_product = Product(name=form.name.data, price=form.price.data,categories=g,sizes=sizes, description=form.description.data, image=image_url)
+                
+                db.session.add(new_product)
+                db.session.commit()
+                for s in sizes:
+                    pz= ProductSize.query.filter_by(product_id=new_product.id,size_id=s.id).first()
+                    pz.stock=request.form[s.name]
+                    db.session.commit()
+                return redirect(url_for('admin'))
 
-    return render_template('admin/add-product.html', admin=True, form=form)
+            return render_template('admin/add-product.html', admin=True, form=form)
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+
 
 @app.route('/admin/order/<order_id>')
 def order(order_id):
-    order = Order.query.filter_by(id=int(order_id)).first()
+    uemail=session['user']
+    if uemail:
+        user = User.query.filter_by(email=uemail).first()
+        if user.typea=="admin":
+            order = Order.query.filter_by(id=int(order_id)).first()
 
-    return render_template('admin/view-order.html', order=order, admin=True)
+            return render_template('admin/view-order.html', order=order, admin=True)
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+
 @app.route('/admin/deleteProduct/<product_id>')
 def deleteProduct(product_id):
-    print(product_id)
-    product = Product.query.filter_by(id=int(product_id)).first()
-    product.delete()
-    return redirect(url_for('admin'))
+    uemail=session['user']
+    if uemail:
+        user = User.query.filter_by(email=uemail).first()
+        if user.typea=="admin":
+            print(product_id)
+            product = Product.query.filter_by(id=int(product_id)).first()
+            product.delete()
+            return redirect(url_for('admin'))
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)

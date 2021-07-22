@@ -1,8 +1,8 @@
 """create_database
 
-Revision ID: 9bffda38f1f6
+Revision ID: 8996bc54a2dc
 Revises: 
-Create Date: 2021-07-19 23:41:41.010540
+Create Date: 2021-07-22 10:41:34.357576
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '9bffda38f1f6'
+revision = '8996bc54a2dc'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -47,12 +47,14 @@ def upgrade():
     sa.Column('last_name', sa.String(length=64), nullable=False),
     sa.Column('email', sa.String(length=128), nullable=False),
     sa.Column('password', sa.String(length=128), nullable=False),
+    sa.Column('typea', sa.String(length=64), nullable=False),
     sa.PrimaryKeyConstraint('user_id')
     )
     op.create_index(op.f('ix_user_email'), 'user', ['email'], unique=True)
     op.create_index(op.f('ix_user_first_name'), 'user', ['first_name'], unique=False)
     op.create_index(op.f('ix_user_last_name'), 'user', ['last_name'], unique=False)
     op.create_index(op.f('ix_user_password'), 'user', ['password'], unique=False)
+    op.create_index(op.f('ix_user_typea'), 'user', ['typea'], unique=False)
     op.create_table('order',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('reference', sa.String(length=5), nullable=True),
@@ -89,6 +91,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('order_id', sa.Integer(), nullable=True),
     sa.Column('product_id', sa.Integer(), nullable=True),
+    sa.Column('size', sa.String(length=20), nullable=True),
     sa.Column('quantity', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['order_id'], ['order.id'], ),
     sa.ForeignKeyConstraint(['product_id'], ['product.id'], ),
@@ -103,6 +106,7 @@ def downgrade():
     op.drop_table('product_size')
     op.drop_table('product_category')
     op.drop_table('order')
+    op.drop_index(op.f('ix_user_typea'), table_name='user')
     op.drop_index(op.f('ix_user_password'), table_name='user')
     op.drop_index(op.f('ix_user_last_name'), table_name='user')
     op.drop_index(op.f('ix_user_first_name'), table_name='user')
