@@ -2,14 +2,14 @@
 
 {% block content %}
 <div class="signinform">
-  <h1>Service Login Form</h1>
+ 
   <!-- container -->
-  <div class="container">
+  <div class="container p-5">
       <!-- main content -->
       <div class="w3l-form-info">
           <div class="w3_info">
               <h2>Login</h2>
-              <form action="/signup" method="post">
+              <form action="/signIn" method="post">
                   <div class="input-group">
                       <span><i class="fas fa-user" aria-hidden="true"></i></span>
                       <input type="email" name="email" placeholder="Username or Email" required="">
@@ -46,7 +46,7 @@
                       </div>
                   </a>
               </div>
-              <p class="account">Don't have an account? <a href="/signup">Sign up</a></p>
+              <p class="account">Don't have an account? <a href="/signUp">Sign up</a></p>
           </div>
       </div>
       <!-- //main content -->

@@ -1,9 +1,9 @@
-from flask import Flask, render_template, redirect, url_for, session,request
+from flask import Flask, render_template, redirect, url_for, session,request,flash, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from  sqlalchemy import  Sequence
 from sqlalchemy.orm import defaultload
-
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from flask_uploads import UploadSet, configure_uploads, IMAGES
 from flask_wtf import FlaskForm
@@ -124,6 +124,7 @@ class User(db.Model):
     last_name =  db.Column(db.String(64), index=True,nullable=False)
     email =  db.Column(db.String(128), index=True,unique=True,nullable=False)
     password =  db.Column(db.String(128), index=True,nullable=False)
+    typea=db.Column(db.String(64), index=True,nullable=False,default='user')
 
     orders = db.relationship("Order", back_populates="user")
 
@@ -206,23 +207,48 @@ def index():
 
         return render_template('index.html', products=products,form_cart=form_cart,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
 
-@app.route('/signin', methods=['GET', 'POST'])
+@app.route('/signIn', methods=['GET', 'POST'])
 def signin():
-   
+    if request.method=="POST":
+        email=request.form['email']
+        password=request.form['password']
+        user = db.session.query(User).filter_by(email = email).first()
+        if (user is None):
+            flash('Sai Email hoặc mật khẩu!')
+        else:
+            if(user.check_password(password)):
+
+                session['user'] = user.email
+                session['ac-type']=user.typea
+                return redirect(url_for('index'))
+            else:
+                flash('Sai Email hoặc mật khẩu!')
+                return render_template('signinpage.html')
     return render_template('signinpage.html')
-@app.route('/signup' ,methods=['GET', 'POST'])
+@app.route('/signUp' ,methods=['GET', 'POST'])
 def signup():
     if request.method=="POST":
         fname=request.form['fname']
         lname=request.form['lname']
         email=request.form['email']
         password=request.form['password']
-        new_user=User(first_name=fname,last_name=lname,email=email,password=password)
-        db.session.add(new_user)
-        db.session.commit()
-        session['user']=email
-        return redirect(url_for('index'))
+        if (db.session.query(User).filter_by(email=email).count() == 0):
+            new_user=User(first_name=fname,last_name=lname,email=email)
+            new_user.set_password(password)
+            db.session.add(new_user)
+            db.session.commit()
+            session['user']=email
+            session['ac-type']=new_user.typea
+            return redirect(url_for('index'))
+        else:
+            flash('Email {} is alrealy exsits!'.format(email))
+            return render_template('signuppage.html')
     return render_template('signuppage.html')
+@app.route('/logOut' ,methods=['GET', 'POST'])
+def logOut():
+    session['user']=None
+    session['ac-type']=None
+    return redirect(url_for('index'))
 
 @app.route('/product/<id>')
 def product(id):
@@ -304,15 +330,25 @@ def checkout():
 
 @app.route('/admin')
 def admin():
-    products = Product.query.all()
-    sizes = Size.query.all()
-    products_in_stock = ProductSize.query.filter(ProductSize.stock > 0).count()
-    products_out_stock = ProductSize.query.filter(ProductSize.stock == 0).count()
-    print(products_in_stock)
-
-    orders = Order.query.all()
-
-    return render_template('admin/index.html', admin=True, products=products,products_out_stock=products_out_stock, sizes=sizes,products_in_stock=products_in_stock, orders=orders)
+    uemail=session['user']
+    if uemail:
+        user = User.query.filter_by(email=uemail).first()
+        if user.typea=="admin":
+            products = Product.query.all()
+            sizes = Size.query.all()
+            products_in_stock = ProductSize.query.filter(ProductSize.stock > 0).count()
+            products_out_stock = ProductSize.query.filter(ProductSize.stock == 0).count()
+            print(products_in_stock)
+            orders = Order.query.all()
+            return render_template('admin/index.html', admin=True, products=products,products_out_stock=products_out_stock, sizes=sizes,products_in_stock=products_in_stock, orders=orders)
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+    
+@app.errorhandler(403)
+def permistion_denied(e):
+    return render_template('admin/403page.html'), 403
 
 @app.route('/admin/add', methods=['GET', 'POST'])
 def add():
