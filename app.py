@@ -405,7 +405,82 @@ def add():
     else:
         return redirect(url_for('signin'))
 
+@app.route('/admin/editProduct/', methods=['GET', 'POST'])
+def editProduct():
+    uemail=session['user']
+    if uemail:
+        user = User.query.filter_by(email=uemail).first()
+        form = AddProduct()
+        if user.typea=="admin":
+            product = Product.query.filter_by(id=request.form['pId']).first()
+            categories=Category.query.all()
+            sizes=Size.query.all()
+    
+            a=[(i.id,i.name)  for i in categories]
+    
+            c=[(i.id,i.name)  for i in sizes]
+            form.categories.choices=a
+            form.sizes.choices=c
+            if form.validate_on_submit():
+                image_url = photos.url(photos.save(form.image.data))
+                print(image_url)
+                g=[]
+                l=[]
+                
+                for c in categories:
+                    for i in form.categories.data:
+                        if c.id == i:
+                            g.append(c) 
+                product.name=form.name.data
+                product.price=form.price.data
+                product.categories=g
+                product.sizes=sizes
+                product.description=form.description.data
+                product.image=image_url
+                db.session.commit()
+                for s in sizes:
+                    pz= ProductSize.query.filter_by(product_id=product.id,size_id=s.id).first()
+                    pz.stock=request.form[s.name]
+                    db.session.commit()
+                return redirect(url_for('admin'))
 
+            return render_template('admin/edit-product.html',product=product,user=user, admin=True, form=form)
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+@app.route('/admin/redirectEdit/<id>', methods=['GET', 'POST'])
+def redirectEdit(id):
+    uemail=session['user']
+    if uemail:
+        user = User.query.filter_by(email=uemail).first()
+        form = AddProduct()
+        if user.typea=="admin":
+            product = Product.query.filter_by(id=id).first()
+            categories=Category.query.all()
+            sizes=Size.query.all()
+    
+            a=[(i.id,i.name)  for i in categories]
+    
+            c=[(i.id,i.name)  for i in sizes]
+            old_cate=[(i.id)  for i in product.categories]
+            old_size=[(i.id)  for i in product.sizes]
+            form.categories.choices=a
+            form.categories.default=old_cate
+   
+            form.sizes.choices=c
+            form.sizes.default=old_size
+            form.price.default=product.price
+            form.image.default=product.image
+            form.description.default=product.description
+            form.name.default=product.name
+            form.process()       
+            return render_template('admin/edit-product.html',product=product, admin=True, form=form)
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+        
 @app.route('/admin/order/<order_id>')
 def order(order_id):
     uemail=session['user']

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" >
+	<div class="row pad">
+		<div class="col-lg-12">
+			<h2 class="bold text-center">Edit Product</h2>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-lg-10 col-lg-offset-1">
+			<div class="panel panel-default">
+				{%if product %}
+				<form method="POST" action="/admin/editProduct/" enctype="multipart/form-data">
+					<div class="panel-body">
+					
+						<div class="row">
+							{{ form.csrf_token }}
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label>Product Name</label>
+									<input name="pId" type="hidden" value="{{product.id}}">
+									{{ form.name(class='form-control') }}
+									{% if form.name.errors %}
+									{% for error in form.name.errors %}
+									<div class="alert alert-danger">
+										<strong>Error: </strong>{{ error }}
+									</div>
+									{% endfor %}
+									{% endif %}
+								</div>
+
+								<div class="form-group">
+									<label>Product Price</label>
+									{{ form.price(class='form-control') }}
+									{% if form.price.errors %}
+									{% for error in form.price.errors %}
+									<div class="alert alert-danger">
+										<strong>Error: </strong>{{ error }}
+									</div>
+									{% endfor %}
+									{% endif %}
+								</div>
+
+							</div>
+							<div class="col-lg-6">
+								<div class="form-group">
+									<div class="form-group">
+										<label>Description</label>
+										{{ form.description(class='form-control') }}
+										{% if form.description.errors %}
+										{% for error in form.description.errors %}
+										<div class="alert alert-danger">
+											<strong>Error: </strong>{{ error }}
+										</div>
+										{% endfor %}
+										{% endif %}
+									</div>
+
+
+									<label>Product Image</label>
+									{{ form.image(class='form-control') }}
+									{% if form.image.errors %}
+									{% for error in form.image.errors %}
+									<div class="alert alert-danger">
+										<strong>Error: </strong>{{ error }}
+									</div>
+									{% endfor %}
+									{% endif %}
+								</div>
+
+							</div>
+							<div class="col-lg-6">
+								<div class="row">
+									<div class="col">
+										<div class="form-group">
+
+											<label>Category</label>
+
+											{{ form.categories(class="form-check form-check-inline") }}
+											{% if form.categories.errors %}
+											{% for error in form.categories.errors %}
+											<div class="alert alert-danger">
+												<strong>Error: </strong>{{ error }}
+											</div>
+											{% endfor %}
+											{% endif %}
+
+
+										</div>
+
+
+
+									</div>
+									<div class="col">
+										<div class="form-group">
+
+											<label>Stock</label>
+
+											{%for num in form.sizes.choices%}
+											<table  class="table">
+												<tr scope="row">
+													<td scope="col">
+														<label class="mt-2">{{num[1]}}</label>
+													</td>
+													<td scope="col">
+														<input class='form-control' type="number" min="0" max="999" value="{{product.get_stock_by_size(num[0])}}" name="{{num[1]}}">
+													</td>
+												</tr>
+											</table>
+
+												
+											{%endfor%}
+
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+					</div>
+
+					<div class="panel-footer">
+						<button type="submit" class="btn btn-primary ml-5">
+							<i class="glyphicon glyphicon-plus-sign"></i> Save Product
+						</button>
+					</div>
+				</form>
+				{%endif%}
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
