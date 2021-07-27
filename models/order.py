@@ -1,9 +1,11 @@
+from datetime import time
 from  sqlalchemy import  Sequence
 from settings import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from .order_item import Order_Item
 from .product import Product
-from sqlalchemy.schema import FetchedValue
+import datetime
+import calendar
 class Order(db.Model):
     id = db.Column(db.Integer,Sequence('id_seq'), primary_key=True)
     reference = db.Column(db.String(5))
@@ -20,7 +22,15 @@ class Order(db.Model):
     items = db.relationship('Order_Item', backref='order', lazy=True)
     user = db.relationship("User", back_populates="orders")
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
+    time_created = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
+    time_updated = db.Column(db.DateTime(timezone=True), onupdate=db.func.now())
 
+    @staticmethod
+    def byYear(year):
+       orders=  db.session.query(db.func.sum(db.extract('month', Order.time_created)).label("month"),db.func.count(db.extract('month', Order.time_created)).label("month")).group_by(db.extract('year', Order.time_created),db.extract('month', Order.time_created)).filter(db.extract('year', Order.time_created)==year).all()
+       ordersm=[(calendar.month_name[i[0]],i[1]) for i in orders]
+       return ordersm
+     
     def order_total(self):
         return db.session.query(db.func.sum(Order_Item.quantity * Product.price)).join(Product).filter(Order_Item.order_id == self.id).scalar() + 1000
 

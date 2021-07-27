@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container container-wrap">
+    <div class="jumbotron">
+        {%if categories%}
+        <table class="table">
+            <thead class="thead-dark">
+                <tr class="d-flex">
+                    <th class="col-2">id</th>
+                    <th  class="col-2">Name</th>
+                    <th  class="col-2">Desctiption</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                {%for cate in categories%}
+                <tr class="d-flex">
+                    <th class="col-1" scope="row">{{cate.id}}</th>
+                    <td class="col-3">{{cate.name}}</td>
+                    <td class="col-3">{{cate.description}}</td>
+                    <td class="col-2">
+                        <form action="/admin/reeditCategory/{{cate.id}}" method="POST">
+                            <button type="submit" class="btn">EDIT</button>
+                        </form>
+                    </td>
+                    <td class="col-2">
+                        <form action="/admin/editCategory/{{cate.id}}" method="POST">
+                            <button type="submit" class="btn">DEL</button>
+                        </form>
+                    </td>
+
+                </tr>
+                {%endfor%}
+            </tbody>
+        </table>
+        {%endif%}
+        <div class="panel-footer d-flex justify-content-center">
+            <form action="/admin/addCategory" method="POST">
+                <button type="submit" class="btn btn-primary ml-5">
+                    <i class="glyphicon glyphicon-plus-sign"></i> Add new category
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

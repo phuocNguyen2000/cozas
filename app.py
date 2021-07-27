@@ -1,3 +1,5 @@
+from models.order import Order
+from models import product, size
 from flask import  render_template, redirect, url_for, session,request,flash, abort
 
 from flask_uploads import UploadSet, configure_uploads, IMAGES
@@ -6,6 +8,7 @@ from wtforms import  widgets,StringField, IntegerField, TextAreaField, HiddenFie
 
 from flask_wtf.file import FileField, FileAllowed
 import random
+from datetime import datetime
 
 from settings import app, db
 
@@ -66,7 +69,7 @@ def handle_cart():
 
     return products, grand_total, grand_total_plus_shipping, quantity_total
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     # session['cart'] = []
     if 'cart' not in session:
@@ -81,6 +84,10 @@ def index():
     categories = models.Category.query.all()
     a=[(i.id,i.name)  for i in categories]
     form_cart = AddToCart()
+    if request.method== 'POST':
+        str=request.form['search-product']
+        if str:
+            products=[i for i in products if str in i.name]
 
     if session['user']:
         user = models.User.query.filter_by(email=session['user']).first()
@@ -88,6 +95,51 @@ def index():
     else:
 
         return render_template('index.html', products=products,categories=categories,form_cart=form_cart,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
+
+@app.route('/dash')
+def dash():
+    # session['cart'] = []
+    products = models.Product.query.all()
+    sizes = models.Size.query.all()
+    orders = models.Order.query.all()
+    products_in_stock = models.ProductSize.query.filter(models.ProductSize.stock > 0).count()
+    products_out_stock =models.ProductSize.query.filter(models.ProductSize.stock == 0).count()
+    now = datetime.now()
+    orders_in_year=Order.byYear(now.year)
+    print(orders_in_year[0])
+    orders = models.Order.query.all()
+    return render_template('dist/index.html',sizes=sizes,orders=orders_in_year,products=products)
+@app.route('/product/<id>')
+def product(id):
+   
+    product = models.Product.query.filter_by(id=id).first()
+    productscart, grand_total, grand_total_plus_shipping, quantity_total = handle_cart()
+
+    form = AddToCart()
+
+    return render_template('view-product.html', product=product, form=form,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
+@app.route('/admin/Products', methods=['GET', 'POST'])
+def products():
+    # session['cart'] = []
+    uemail=session['user']
+    if uemail:
+        user = models.User.query.filter_by(email=uemail).first()
+        if user.typea=="admin":
+            products = models.Product.query.all()
+            sizes = models.Size.query.all()
+            orders = models.Order.query.all()
+            products_in_stock = models.ProductSize.query.filter(models.ProductSize.stock > 0).count()
+            products_out_stock =models.ProductSize.query.filter(models.ProductSize.stock == 0).count()
+            now = datetime.now()
+            orders_in_year=Order.byYear(now.year)
+            print(orders_in_year[0])
+            orders = models.Order.query.all()
+            return render_template('dist/table-datatable.html',products=products)
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+        
 
 @app.route('/signIn', methods=['GET', 'POST'])
 def signin():
@@ -126,21 +178,6 @@ def signup():
             flash('Email {} is alrealy exsits!'.format(email))
             return render_template('signuppage.html')
     return render_template('signuppage.html')
-@app.route('/logOut' ,methods=['GET', 'POST'])
-def logOut():
-    session['user']=None
-    session['ac-type']=None
-    return redirect(url_for('index'))
-
-@app.route('/product/<id>')
-def product(id):
-   
-    product = models.Product.query.filter_by(id=id).first()
-    productscart, grand_total, grand_total_plus_shipping, quantity_total = handle_cart()
-
-    form = AddToCart()
-
-    return render_template('view-product.html', product=product, form=form,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
 
 @app.route('/quick-add/<id>')
 def quick_add(id):
@@ -201,7 +238,7 @@ def checkout():
                 p= models.Product.query.filter_by(id=product['id']).first()
                 print("p",p.id)
                 print("size",size.id)
-                p.set_stock(size_id=size.id,quantity= - product['quantity'])
+                p.set_stock(size_id=size.id,quantity= - int(product['quantity']))
                 
             db.session.add(order)
             db.session.commit()
@@ -224,11 +261,14 @@ def admin():
         if user.typea=="admin":
             products = models.Product.query.all()
             sizes = models.Size.query.all()
+            orders = models.Order.query.all()
             products_in_stock = models.ProductSize.query.filter(models.ProductSize.stock > 0).count()
             products_out_stock =models.ProductSize.query.filter(models.ProductSize.stock == 0).count()
-            print(products_in_stock)
+            now = datetime.now()
+            orders_in_year=Order.byYear(now.year)
+            print(orders_in_year[0])
             orders = models.Order.query.all()
-            return render_template('admin/index.html', admin=True, products=products,products_out_stock=products_out_stock, sizes=sizes,products_in_stock=products_in_stock, orders=orders)
+            return render_template('admin/index.html',sizes=sizes,orders=orders_in_year,products=products)
         else:
             abort(403)
     else:
@@ -278,6 +318,82 @@ def add():
                 return redirect(url_for('admin'))
 
             return render_template('admin/add-product.html', admin=True, form=form)
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+@app.route('/admin/categories', methods=['GET', 'POST'])
+def categories():
+    uemail=session['user']
+    if uemail:
+        user = models.User.query.filter_by(email=uemail).first()
+        if user.typea=="admin":
+            categories=models.Category.query.all()
+            return render_template('admin/categories.html', admin=True, categories=categories)
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+
+
+@app.route('/admin/addCategory', methods=['GET', 'POST'])
+def addCategory():
+    uemail=session['user']
+    if uemail:
+        user = models.User.query.filter_by(email=uemail).first()
+        if user.typea=="admin":
+            if request.method=="POST":
+                name = request.form['cate-name']
+                desc = request.form['desc']
+                if name and desc:
+                    new_cate = models.Category(name=name,description=desc)
+                    db.session.add(new_cate)
+                    db.session.commit()
+                else:
+                    flash("error") 
+                return redirect(url_for('admin'))
+
+            return render_template('admin/add-category.html', admin=True)
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+
+
+@app.route('/admin/editCategory', methods=['GET', 'POST'])
+def editCategory():
+    uemail=session['user']
+    if uemail:
+        user = models.User.query.filter_by(email=uemail).first()
+        if user.typea=="admin":
+            
+            if request.method=="POST":
+                id = request.form['id']
+                name = request.form['cate-name']
+                desc = request.form['desc']
+                if name and desc:
+                    cate = models.Category.query.filter_by(id=id).first()
+                    cate.name=name
+                    cate.description=desc
+                    db.session.commit()
+                else:
+                    flash("err") 
+                return redirect(url_for('admin'))
+
+            return render_template('admin/edit-category.html', admin=True)
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+
+@app.route('/admin/reeditCategory/<id>', methods=['GET', 'POST'])
+def reeditCategory(id):
+    uemail=session['user']
+    if uemail:
+        user = models.User.query.filter_by(email=uemail).first()
+        if user.typea=="admin":
+            cate = models.Category.query.filter_by(id=id).first()
+            return render_template('admin/edit-category.html', admin=True,category=cate)
         else:
             abort(403)
     else:

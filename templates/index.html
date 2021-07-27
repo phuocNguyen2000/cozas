@@ -188,7 +188,8 @@
 				</button>
 				{%if categories%}
 				{%for cate in categories%}
-				<button class="stext-106 text-capitalize cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" data-filter=".{{cate.name}}">
+				<button class="stext-106 text-capitalize cl6 hov1 bor3 trans-04 m-r-32 m-tb-5"
+					data-filter=".{{cate.name}}">
 					{{cate.name}}
 				</button>
 				{%endfor%}
@@ -210,16 +211,18 @@
 			</div>
 
 			<!-- Search product -->
-			<div class="dis-none panel-search w-full p-t-10 p-b-15">
-				<div class="bor8 dis-flex p-l-15">
-					<button class="size-113 flex-c-m fs-16 cl2 hov-cl1 trans-04">
-						<i class="zmdi zmdi-search"></i>
-					</button>
+			<form action="{{url_for('index')}}" method="post">
+				<div class="dis-none panel-search w-full p-t-10 p-b-15">
+					<div class="bor8 dis-flex p-l-15">
+						<button type="submit" class="size-113 flex-c-m fs-16 cl2 hov-cl1 trans-04">
+							<i class="zmdi zmdi-search"></i>
+						</button>
 
-					<input class="mtext-107 cl2 size-114 plh2 p-r-15" type="text" name="search-product"
-						placeholder="Search">
+						<input class="mtext-107 cl2 size-114 plh2 p-r-15" type="text" name="search-product"
+							placeholder="Search">
+					</div>
 				</div>
-			</div>
+			</form>
 
 			<!-- Filter -->
 			<div class="dis-none panel-filter w-full p-t-10">
@@ -664,7 +667,7 @@
 				{%for p in productscart%}
 				<li class="header-cart-item flex-w flex-t m-b-12">
 					<form name="removeform" action="/remove-from-cart/{{p['index']}}" method="POST">
-						<div  onClick="document.forms['removeform'].submit();" class="header-cart-item-img">
+						<div onClick="document.forms['removeform'].submit();" class="header-cart-item-img">
 							<img src="{{ p['image']}}" alt="IMG">
 						</div>
 						<div class="header-cart-item-txt p-t-8">

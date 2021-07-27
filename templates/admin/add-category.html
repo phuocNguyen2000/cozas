@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container container-wrap">
+    <div class="jumbotron  justify-content-center">
+        <form action="/admin/addCategory" method="POST">
+            <p>Add New Catergory</p>
+            <table class="table">
+                <tr class="d-flex">
+
+                    <td class="col-2">
+                        <label for=""> Category name</label>
+                    </td>
+                    <td class="col-5"><input class="form-control" type="text" name="cate-name" id=""></td>
+                </tr>
+                <tr class="d-flex">
+
+                    <td class="col-2">
+                        <label for="">Descsription</label>
+                    </td>
+                    <td class="col-5"><input class="form-control" type="text" name="desc" id=""></td>
+                </tr>
+            </table>
+            <div class="panel-footer d-flex justify-content-center">
+                <button type="submit" class="btn btn-primary ml-5">
+                    <i class="glyphicon glyphicon-plus-sign"></i> Save Product
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+{% endblock %}
