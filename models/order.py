@@ -27,7 +27,7 @@ class Order(db.Model):
 
     @staticmethod
     def byYear(year):
-       orders=  db.session.query(db.func.sum(db.extract('month', Order.time_created)).label("month"),db.func.count(db.extract('month', Order.time_created)).label("month")).group_by(db.extract('year', Order.time_created),db.extract('month', Order.time_created)).filter(db.extract('year', Order.time_created)==year).all()
+       orders=  db.session.query(db.extract('month', Order.time_created),db.func.count(db.extract('month', Order.time_created)).label("month")).group_by(db.extract('year', Order.time_created),db.extract('month', Order.time_created)).filter(db.extract('year', Order.time_created)==year).all()
        ordersm=[(calendar.month_name[i[0]],i[1]) for i in orders]
        return ordersm
      

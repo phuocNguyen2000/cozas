@@ -98,32 +98,44 @@
     <section class="section">
         <div class="card">
             <div class="card-header">
-                Categories Datatable
+                Product Datatable
             </div>
             <div class="card-body table-responsive">
-                {%if categories%}
+                {%if products%}
                 <table class="table table-striped mb-0" id="table1">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Name</th>
-                            <th>Description</th>
+                            <th>Price</th>
+                            <th>Image</th>
+                            <th>Stock</th>
+                            {% for size in sizes %}	
+							<th>{{size.name}}</th>
+							{%endfor%}
                             
                         </tr>
                     </thead>
                     <tbody>
-                        {%for cate in categories%}
+                        {%for product in products%}
                         <tr>
-                            <td>{{cate.id}}</td>
-                            <td>{{cate.name}}</td>
-                            <td>{{cate.description}}</td>
+                            <td>{{product.name}}</td>
+                            <td>{{product.price}}</td>
                             <td>
-								<form action="/admin/editCategory/{{cate.id}}" method="POST">
+                                <img class="img-fluid img-thumbnail" src="{{product.image}}" alt="{{product.name}}" >
+                            </td>
+                            <td>{{product.get_stock()}}</td>
+                            {%for size in product.sizes%}
+								<td>{{ product.get_stock_by_size(size_id=size.id) }}</td>
+							{%endfor%}
+                            <td>
+								<form action="/admin/deleteProduct/{{product.id}}">
 									<button type="submit" class="btn">DEL</button>
 								</form>					
 							</td>
 							<td>
-									<a href="{{url_for('reeditCategory',id=cate.id)}}" class="btn">EDIT</a>			
+								<form action="/admin/redirectEdit/{{product.id}}">
+									<button type="submit" class="btn">EDIT</button>
+								</form>					
 							</td>
                             
                         </tr>
@@ -132,7 +144,7 @@
                 </table>
                 {%endif%}
                 <div  class="d-flex justify-content-center">
-                    <a href="/admin/addCategory" class="btn btn-lg btn-dark">Add New</a>
+                    <a href="{{url_for('add')}}" class="btn btn-lg btn-dark">Add New</a>
                 </div>
             </div>
         </div>

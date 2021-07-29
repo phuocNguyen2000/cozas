@@ -96,7 +96,7 @@ def index():
 
         return render_template('index.html', products=products,categories=categories,form_cart=form_cart,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
 
-@app.route('/dash')
+@app.route('/dash', methods=['GET', 'POST'])
 def dash():
     # session['cart'] = []
     products = models.Product.query.all()
@@ -109,7 +109,40 @@ def dash():
     print(orders_in_year[0])
     orders = models.Order.query.all()
     return render_template('dist/index.html',sizes=sizes,orders=orders_in_year,products=products)
-@app.route('/product/<id>')
+
+@app.route('/adP', methods=['GET', 'POST'])
+def adP():
+    # session['cart'] = []
+    categories = models.Category.query.all()
+    sizes = models.Size.query.all()
+    if request.method=="POST":
+        if request.form['name'] and request.form['desc'] and request.form['name']:
+            if 'file' in request.files:
+                f=request.files['file']
+                image_url=photos.url(photos.save(f))
+                print("ok")
+                g=[]
+                for cate in categories:
+                    if 'CateCheck'+str(cate.id) in request.form:
+                        g.append(cate)
+                   
+                        
+                new_product = models.Product(name=request.form['name'], price=request.form['price'],categories=g,sizes=sizes, description=request.form['desc'], image=image_url)  
+                db.session.add(new_product)
+                db.session.commit()
+                for s in sizes:
+                    pz= models.ProductSize.query.filter_by(product_id=new_product.id,size_id=s.id).first()
+                    pz.stock=request.form[s.name]
+                    db.session.commit()
+                return redirect(url_for('products'))
+        else:
+            flash(f'Vui lòng đăng nhập trước','danger')
+            return redirect(url_for('adP'))
+        
+    return render_template('admin/add-p.html',sizes=sizes,categories=categories)
+
+
+@app.route('/product/<id>', methods=['GET', 'POST'])
 def product(id):
    
     product = models.Product.query.filter_by(id=id).first()
@@ -134,11 +167,36 @@ def products():
             orders_in_year=Order.byYear(now.year)
             print(orders_in_year[0])
             orders = models.Order.query.all()
-            return render_template('dist/table-datatable.html',products=products)
+            return render_template('admin/products.html',products=products)
         else:
             abort(403)
     else:
         return redirect(url_for('signin'))
+
+
+@app.route('/admin/Orders', methods=['GET', 'POST'])
+def orders():
+    # session['cart'] = []
+    uemail=session['user']
+    if uemail:
+        user = models.User.query.filter_by(email=uemail).first()
+        if user.typea=="admin":
+            products = models.Product.query.all()
+            sizes = models.Size.query.all()
+            orders = models.Order.query.all()
+            products_in_stock = models.ProductSize.query.filter(models.ProductSize.stock > 0).count()
+            products_out_stock =models.ProductSize.query.filter(models.ProductSize.stock == 0).count()
+            now = datetime.now()
+            orders_in_year=Order.byYear(now.year)
+            print(orders_in_year[0])
+            orders = models.Order.query.all()
+            return render_template('admin/orders.html',orders=orders)
+        else:
+            abort(403)
+    else:
+        return redirect(url_for('signin'))
+
+
         
 
 @app.route('/signIn', methods=['GET', 'POST'])
@@ -178,8 +236,13 @@ def signup():
             flash('Email {} is alrealy exsits!'.format(email))
             return render_template('signuppage.html')
     return render_template('signuppage.html')
+@app.route('/logOut' ,methods=['GET', 'POST'])
+def logOut():
+    session['user']=None
+    session['ac-type']=None
+    return redirect(url_for('index'))
 
-@app.route('/quick-add/<id>')
+@app.route('/quick-add/<id>', methods=['GET', 'POST'])
 def quick_add(id):
     if 'cart' not in session:
         session['cart'] = []
@@ -204,7 +267,7 @@ def add_to_cart():
 
     return redirect(url_for('index'))
 
-@app.route('/cart')
+@app.route('/cart', methods=['GET', 'POST'])
 def cart():
     products, grand_total, grand_total_plus_shipping, quantity_total = handle_cart()
 
@@ -253,7 +316,7 @@ def checkout():
         return redirect(url_for('signin'))
 
 
-@app.route('/admin')
+@app.route('/admin', methods=['GET', 'POST'])
 def admin():
     uemail=session['user']
     if uemail:
@@ -285,39 +348,32 @@ def add():
         user = models.User.query.filter_by(email=uemail).first()
         form = AddProduct()
         if user.typea=="admin":
-            categories=models.Category.query.all()
-            sizes=models.Size.query.all()
-    
-            a=[(i.id,i.name)  for i in categories]
-    
-            c=[(i.id,i.name)  for i in sizes]
+            categories = models.Category.query.all()
+            sizes = models.Size.query.all()
+            if request.method=="POST":
+                if request.form['name'] and request.form['desc'] and request.form['price']:
+                    if 'file' in request.files:
+                        f=request.files['file']
+                        image_url=photos.url(photos.save(f))
+                        print("ok")
+                        g=[]
+                        for cate in categories:
+                            if 'CateCheck'+str(cate.id) in request.form:
+                                g.append(cate)
+                                  
+                        new_product = models.Product(name=request.form['name'], price=request.form['price'],categories=g,sizes=sizes, description=request.form['desc'], image=image_url)  
+                        db.session.add(new_product)
+                        db.session.commit()
+                        for s in sizes:
+                            pz= models.ProductSize.query.filter_by(product_id=new_product.id,size_id=s.id).first()
+                            pz.stock=request.form[s.name]
+                            db.session.commit()
+                        return redirect(url_for('products'))
+                else:
+                    flash(f'Vui lòng nhập đầy đủ thông tin','danger')
+                    return redirect(url_for('add'))         
 
-            form.categories.choices=a
-   
-            form.sizes.choices=c
-            print(form.sizes.choices[0])
-
-            if form.validate_on_submit():
-                image_url = photos.url(photos.save(form.image.data))
-                print(image_url)
-                g=[]
-                l=[]
-                
-                for c in categories:
-                    for i in form.categories.data:
-                        if c.id == i:
-                            g.append(c) 
-                new_product = models.Product(name=form.name.data, price=form.price.data,categories=g,sizes=sizes, description=form.description.data, image=image_url)
-                
-                db.session.add(new_product)
-                db.session.commit()
-                for s in sizes:
-                    pz= models.ProductSize.query.filter_by(product_id=new_product.id,size_id=s.id).first()
-                    pz.stock=request.form[s.name]
-                    db.session.commit()
-                return redirect(url_for('admin'))
-
-            return render_template('admin/add-product.html', admin=True, form=form)
+            return render_template('admin/add-product.html', categories=categories,sizes=sizes)
         else:
             abort(403)
     else:
@@ -378,9 +434,9 @@ def editCategory():
                     db.session.commit()
                 else:
                     flash("err") 
-                return redirect(url_for('admin'))
+                return redirect(url_for('categories'))
 
-            return render_template('admin/edit-category.html', admin=True)
+            return render_template('edit-category.html')
         else:
             abort(403)
     else:
@@ -393,7 +449,7 @@ def reeditCategory(id):
         user = models.User.query.filter_by(email=uemail).first()
         if user.typea=="admin":
             cate = models.Category.query.filter_by(id=id).first()
-            return render_template('admin/edit-category.html', admin=True,category=cate)
+            return render_template('edit-category.html',category=cate)
         else:
             abort(403)
     else:
@@ -404,45 +460,41 @@ def editProduct():
     uemail=session['user']
     if uemail:
         user = models.User.query.filter_by(email=uemail).first()
-        form = AddProduct()
         if user.typea=="admin":
             product = models.Product.query.filter_by(id=request.form['pId']).first()
-            categories=models.Category.query.all()
-            sizes=models.Size.query.all()
-    
-            a=[(i.id,i.name)  for i in categories]
-    
-            c=[(i.id,i.name)  for i in sizes]
-            form.categories.choices=a
-            form.sizes.choices=c
-            if form.validate_on_submit():
-                image_url = photos.url(photos.save(form.image.data))
-                print(image_url)
-                g=[]
-                l=[]
-                
-                for c in categories:
-                    for i in form.categories.data:
-                        if c.id == i:
-                            g.append(c) 
-                product.name=form.name.data
-                product.price=form.price.data
-                product.categories=g
-                product.sizes=sizes
-                product.description=form.description.data
-                product.image=image_url
-                db.session.commit()
-                for s in sizes:
-                    pz= models.ProductSize.query.filter_by(product_id=product.id,size_id=s.id).first()
-                    pz.stock=request.form[s.name]
-                    db.session.commit()
-                return redirect(url_for('admin'))
-
-            return render_template('admin/edit-product.html',product=product,user=user, admin=True, form=form)
+            categories = models.Category.query.all()
+            sizes = models.Size.query.all()
+            if request.method=="POST":
+                if request.form['name'] and request.form['desc'] and request.form['price']:
+                    if 'file' in request.files:
+                        f=request.files['file']
+                        image_url=photos.url(photos.save(f))
+                        print("ok")
+                        g=[]
+                        for cate in categories:
+                            if 'CateCheck'+str(cate.id) in request.form:
+                                g.append(cate)
+                                  
+                        product.name=request.form['name']
+                        product.price=request.form['price']
+                        product.categories=g
+                        product.sizes=sizes
+                        product.description=request.form['desc']
+                        product.image=image_url
+                        db.session.commit()
+                        for s in sizes:
+                            pz= models.ProductSize.query.filter_by(product_id=product.id,size_id=s.id).first()
+                            pz.stock=request.form[s.name]
+                            db.session.commit()
+        
+                        return redirect(url_for('products')) 
+            return render_template('admin/edit-product.html',product=product,user=user,categories=categories,sizes=sizes)
         else:
             abort(403)
     else:
         return redirect(url_for('signin'))
+
+
 @app.route('/admin/redirectEdit/<id>', methods=['GET', 'POST'])
 def redirectEdit(id):
     uemail=session['user']
@@ -454,22 +506,8 @@ def redirectEdit(id):
             categories=models.Category.query.all()
             sizes=models.Size.query.all()
     
-            a=[(i.id,i.name)  for i in categories]
-    
-            c=[(i.id,i.name)  for i in sizes]
-            old_cate=[(i.id)  for i in product.categories]
-            old_size=[(i.id)  for i in product.sizes]
-            form.categories.choices=a
-            form.categories.default=old_cate
-   
-            form.sizes.choices=c
-            form.sizes.default=old_size
-            form.price.default=product.price
-            form.image.default=product.image
-            form.description.default=product.description
-            form.name.default=product.name
-            form.process()       
-            return render_template('admin/edit-product.html',product=product, admin=True, form=form)
+                 
+            return render_template('admin/edit-product.html',product=product,categories=categories,sizes=sizes)
         else:
             abort(403)
     else:
