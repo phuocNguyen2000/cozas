@@ -96,50 +96,8 @@ def index():
 
         return render_template('index.html', products=products,categories=categories,form_cart=form_cart,productscart=productscart ,grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
 
-@app.route('/dash', methods=['GET', 'POST'])
-def dash():
-    # session['cart'] = []
-    products = models.Product.query.all()
-    sizes = models.Size.query.all()
-    orders = models.Order.query.all()
-    products_in_stock = models.ProductSize.query.filter(models.ProductSize.stock > 0).count()
-    products_out_stock =models.ProductSize.query.filter(models.ProductSize.stock == 0).count()
-    now = datetime.now()
-    orders_in_year=Order.byYear(now.year)
-    print(orders_in_year[0])
-    orders = models.Order.query.all()
-    return render_template('dist/index.html',sizes=sizes,orders=orders_in_year,products=products)
 
-@app.route('/adP', methods=['GET', 'POST'])
-def adP():
-    # session['cart'] = []
-    categories = models.Category.query.all()
-    sizes = models.Size.query.all()
-    if request.method=="POST":
-        if request.form['name'] and request.form['desc'] and request.form['name']:
-            if 'file' in request.files:
-                f=request.files['file']
-                image_url=photos.url(photos.save(f))
-                print("ok")
-                g=[]
-                for cate in categories:
-                    if 'CateCheck'+str(cate.id) in request.form:
-                        g.append(cate)
-                   
-                        
-                new_product = models.Product(name=request.form['name'], price=request.form['price'],categories=g,sizes=sizes, description=request.form['desc'], image=image_url)  
-                db.session.add(new_product)
-                db.session.commit()
-                for s in sizes:
-                    pz= models.ProductSize.query.filter_by(product_id=new_product.id,size_id=s.id).first()
-                    pz.stock=request.form[s.name]
-                    db.session.commit()
-                return redirect(url_for('products'))
-        else:
-            flash(f'Vui lòng đăng nhập trước','danger')
-            return redirect(url_for('adP'))
-        
-    return render_template('admin/add-p.html',sizes=sizes,categories=categories)
+
 
 
 @app.route('/product/<id>', methods=['GET', 'POST'])
@@ -167,7 +125,7 @@ def products():
             orders_in_year=Order.byYear(now.year)
             print(orders_in_year[0])
             orders = models.Order.query.all()
-            return render_template('admin/products.html',products=products)
+            return render_template('admin/products.html',sizes=sizes,products=products)
         else:
             abort(403)
     else:
@@ -286,6 +244,9 @@ def checkout():
         user = models.User.query.filter_by(email=uemail).first()
         form = Checkout()
         products, grand_total, grand_total_plus_shipping, quantity_total = handle_cart()
+        form.email.data=user.email
+        form.first_name.data=user.first_name
+        form.last_name.data=user.last_name
 
         if form.validate_on_submit():
 
@@ -311,7 +272,7 @@ def checkout():
 
             return redirect(url_for('index'))
 
-        return render_template('checkout.html', form=form,products=products, grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
+        return render_template('checkout.html',user=user, form=form,products=products, grand_total=grand_total, grand_total_plus_shipping=grand_total_plus_shipping, quantity_total=quantity_total)
     else:
         return redirect(url_for('signin'))
 
@@ -331,7 +292,7 @@ def admin():
             orders_in_year=Order.byYear(now.year)
             print(orders_in_year[0])
             orders = models.Order.query.all()
-            return render_template('admin/index.html',sizes=sizes,orders=orders_in_year,products=products)
+            return render_template('admin/index.html',sizes=sizes,orders=orders_in_year,products=products,products_in_stock=products_in_stock,products_count=len(products),stock_order=len(orders))
         else:
             abort(403)
     else:
@@ -436,7 +397,7 @@ def editCategory():
                     flash("err") 
                 return redirect(url_for('categories'))
 
-            return render_template('edit-category.html')
+            return render_template('admin/edit-category.html')
         else:
             abort(403)
     else:
@@ -449,7 +410,7 @@ def reeditCategory(id):
         user = models.User.query.filter_by(email=uemail).first()
         if user.typea=="admin":
             cate = models.Category.query.filter_by(id=id).first()
-            return render_template('edit-category.html',category=cate)
+            return render_template('admin/edit-category.html',category=cate)
         else:
             abort(403)
     else:
@@ -500,13 +461,10 @@ def redirectEdit(id):
     uemail=session['user']
     if uemail:
         user = models.User.query.filter_by(email=uemail).first()
-        form = AddProduct()
         if user.typea=="admin":
             product = models.Product.query.filter_by(id=id).first()
             categories=models.Category.query.all()
             sizes=models.Size.query.all()
-    
-                 
             return render_template('admin/edit-product.html',product=product,categories=categories,sizes=sizes)
         else:
             abort(403)

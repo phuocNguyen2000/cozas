@@ -106,82 +106,95 @@
                             Add new Product
                         </div>
                         <div class="card-body table-responsive">
-                            {%if product%}
-                            <form class="form form-horizontal" action="{{url_for('')}}" method="POST" enctype="multipart/form-data">
-                                <div class="form-body">
-                                    <input type="hidden" value="{{product.id}}" name="pId">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <label>Name</label>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="panel panel-default">
+                                        <div class="panel-body">
+                                            <h4>Products Bought</h4>
                                         </div>
-                                        <div class="col-md-8 form-group">
-                                            <input type="text" value="{{product.name}}" id="first-name" class="form-control" name="name"
-                                                placeholder="Name">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label>Description</label>
-                                        </div>
-                                        <div class="col-md-8 form-group">
-                                            <input type="text" id="email-id" class="form-control" name="desc"
-                                                placeholder="Description">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label>Price</label>
-                                        </div>
-                                        <div class="col-md-8 form-group">
-                                            <input type="number" id="contact-info"  value="{{product.price}}"  class="form-control" name="price"
-                                                placeholder="Price">
-                                        </div>
-                                        {%for size in sizes%}
-                                        <div class="col-md-4">
-                                            <label>{{size.name}}</label>
-                                        </div>
-                                        <div class="col-md-8 form-group">
-                                            <input type="number" value="{{product.get_stock_by_size(size.id)}}" id="contact-info" class="form-control" name="{{size.name}}"
-                                                placeholder="Quantity of size {{size.name}}">
-                                        </div>
-
-                                        {%endfor%}
-                                        <div class="col-md-4">
-                                            <label>Image</label>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="card">
-                                                <div class="card-content">
-                                                    <div class="card-body">
-                                                        <input type="file" name="file">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label>Categories</label>
-                                        </div>
-                                        <div class="col-md-8 form-group">
-                                            <ul class="list-unstyled mb-0">
-                                                
-                                                {%for category in categories%}
-                                                <li class="d-inline-block me-2 mb-1">
-                                                    <div class="form-check">
-                                                        <div class="custom-control custom-checkbox">
-                                                            <input type="checkbox" class="form-check-input form-check-primary" checked
-                                                                name="CateCheck{{category.id}}" id="customColorCheck1">
-                                                            <label class="form-check-label" for="customColorCheck1">{{category.name}}</label>
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                {%endfor%}
-                                            </ul>
-                                        </div>
-                                        <div class="col-sm-12 d-flex justify-content-end">
-                                            <button type="submit" class="btn btn-primary me-1 mb-1">Submit</button>
-                                            <button type="reset"
-                                                class="btn btn-light-secondary me-1 mb-1">Reset</button>
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th><th>Name</th><th>Price</th><th>Units</th><th>Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for item in order.items %}
+                                                    <tr>
+                                                        <td>{{ item.product_id }}</td>
+                                                        <td>{{ item.product.name }}</td>
+                                                        <td>&dollar;{{ item.product.price / 100 }}</td>
+                                                        <td>{{ item.quantity }}</td>
+                                                        <th>&dollar;{{ item.product.price * item.quantity / 100 }}</th>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    <tr>
+                                                        <td>0</td>
+                                                        <td>Flat Rate Shipping</td>
+                                                        <td>&dollar;10.00</td>
+                                                        <td>1</td>
+                                                        <th>&dollar;10.00</th>
+                                                    </tr>
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <th colspan="4" class="text-right">Total</th>
+                                                        <th>{{ order.order_total() / 100 }}</th>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
-                            </form>
-                            {%endif%}
+                                <div class="col-lg-6">
+                                    <h3 class="strong">Buyer Information</h3>
+                                    <div role="tabpanel">
+                                        <!-- Nav tabs -->
+                                        <ul class="nav nav-tabs" role="tablist">
+                                            <li role="presentation" class="active">
+                                                <a href="#shipping" aria-controls="shipping" role="tab" data-toggle="tab">Shipping Info</a>
+                                            </li>
+                                            <li role="presentation">
+                                                <a href="#details" aria-controls="details" role="tab" data-toggle="tab">Personal Details</a>
+                                            </li>
+                                        </ul>
+                                    
+                                        <!-- Tab panes -->
+                                        <div class="tab-content">
+                                            <div role="tabpanel" class="tab-pane active" id="shipping">
+                                                <h4 class="bold">Shipping Information</h4>
+                                                <p><i class="glyphicon glyphicon-user"></i> NAME: <strong>{{ order.first_name + ' ' + order.last_name }}</strong></p>
+                                                <p><i class="glyphicon glyphicon-map-marker"></i> ADDRESS: 
+                                                    <strong>{{ order.address }}</strong>
+                                                </p>
+                                                <p><i class="glyphicon glyphicon-th"></i> City: <strong>{{ order.city }}</strong></p>
+                                                <p><i class="glyphicon glyphicon-th"></i> State: <strong>{{ order.state }}</strong></p>
+                                                <p><i class="glyphicon glyphicon-flag"></i> Country: <strong>{{ order.country }}</strong></p>
+                                                <hr />
+                                                <p>
+                                                    <i class="glyphicon glyphicon-gift"></i> 
+                                                    Delivery: <strong>Next Day Delivery</strong>
+                                                </p>
+                                                <hr />
+                                                <p>
+                                                    <i class="glyphicon glyphicon-piggy-bank"></i> 
+                                                    Payment Type: <strong>{{ order.payment_type }}</strong>
+                                                </p>
+                                            </div>
+                                            <div role="tabpanel" class="tab-pane" id="details">
+                                                <h4 class="bold">Personal Details Provided</h4>
+                                                <p><i class="glyphicon glyphicon-user"></i> NAME: <strong>{{ order.first_name + ' ' + order.last_name }}</strong></p>
+                                                <p><i class="glyphicon glyphicon-phone-alt"></i> PHONE: <strong>{{ order.phone_number }}</strong></p>
+                                                <p>
+                                                    <i class="glyphicon glyphicon-envelope"></i> EMAIL: 
+                                                    <strong>{{ order.email }}</strong>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

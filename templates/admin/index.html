@@ -25,7 +25,7 @@
                 <div class="sidebar-header">
                     <div class="d-flex justify-content-between">
                         <div class="logo">
-                            <a href="{{url_for('dash')}}"><img src="../static/assets/images/logo/logo.png" alt="Logo"
+                            <a href="{{url_for('admin')}}"><img src="../static/assets/images/logo/logo.png" alt="Logo"
                                     srcset=""></a>
                         </div>
                         <div class="toggler">
@@ -90,13 +90,13 @@
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="stats-icon purple">
-                                                    <i class="iconly-boldShow"></i>
+                                                    <i class="iconly-boldHome"></i>
                                                 </div>
                                             </div>
-                                            <div class="col-md-8">
-                                                <h6 class="text-muted font-semibold">Profile Views</h6>
+                                            <a href="/" class="col-md-8">
+                                                <h6 class="text-muted font-semibold">Go to website</h6>
                                                 <h6 class="font-extrabold mb-0">112.000</h6>
-                                            </div>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -110,10 +110,10 @@
                                                     <i class="iconly-boldProfile"></i>
                                                 </div>
                                             </div>
-                                            <div class="col-md-8">
-                                                <h6 class="text-muted font-semibold">Followers</h6>
-                                                <h6 class="font-extrabold mb-0">183.000</h6>
-                                            </div>
+                                            <a href="admin/Products" class="col-md-8">
+                                                <h6 class="text-muted font-semibold">Products in stock</h6>
+                                                <h6 class="font-extrabold mb-0">{{products_in_stock}}</h6>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -127,10 +127,10 @@
                                                     <i class="iconly-boldAdd-User"></i>
                                                 </div>
                                             </div>
-                                            <div class="col-md-8">
-                                                <h6 class="text-muted font-semibold">Following</h6>
-                                                <h6 class="font-extrabold mb-0">80.000</h6>
-                                            </div>
+                                            <a href="admin/Products" class="col-md-8">
+                                                <h6 class="text-muted font-semibold">Product count</h6>
+                                                <h6 class="font-extrabold mb-0">{{products_count}}</h6>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -144,10 +144,10 @@
                                                     <i class="iconly-boldBookmark"></i>
                                                 </div>
                                             </div>
-                                            <div class="col-md-8">
-                                                <h6 class="text-muted font-semibold">Saved Post</h6>
-                                                <h6 class="font-extrabold mb-0">112</h6>
-                                            </div>
+                                            <a href="admin/Orders" class="col-md-8">
+                                                <h6 class="text-muted font-semibold">Order</h6>
+                                                <h6 class="font-extrabold mb-0">{{stock_order}}</h6>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
