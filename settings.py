@@ -12,6 +12,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trendy.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = 'mysecret'
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['UPLOADED_PHOTOS_DEST'] = os.path.join(basedir, 'static/images')
 
 app.config['UPLOADED_FILES_DEST'] = os.getcwd()
 db = SQLAlchemy(app)
