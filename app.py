@@ -2,7 +2,7 @@ from models.order import Order
 from models import product, size
 from flask import  render_template, redirect, url_for, session,request,flash, abort
 
-from flask_uploads import UploadSet, configure_uploads, IMAGES
+from flask_uploads import UploadSet, configure_uploads, IMAGES,patch_request_class
 from flask_wtf import FlaskForm
 from wtforms import  widgets,StringField, IntegerField, TextAreaField, HiddenField, SelectField,SelectMultipleField
 
@@ -14,6 +14,7 @@ from settings import app, db
 import secrets
 photos = UploadSet('photos', IMAGES)
 configure_uploads(app, photos)
+patch_request_class(app)
 
 
 class MultiCheckboxField(SelectMultipleField):
