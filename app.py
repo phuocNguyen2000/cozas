@@ -11,10 +11,10 @@ import random
 from datetime import datetime
 
 from settings import app, db
-import os
+import secrets
 photos = UploadSet('photos', IMAGES)
 configure_uploads(app, photos)
-app.config['UPLOADED_FILES_DEST'] = os.getcwd()
+
 
 class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
@@ -316,7 +316,7 @@ def add():
                 if request.form['name'] and request.form['desc'] and request.form['price']:
                     if 'file' in request.files:
                         f=request.files['file']
-                        image_url=photos.url(photos.save(f))
+                        image_url=photos.url(photos.save(f),name=secrets.token_hex(10) + ".")
                         print("ok")
                         g=[]
                         for cate in categories:
@@ -430,7 +430,7 @@ def editProduct():
                 if request.form['name'] and request.form['desc'] and request.form['price']:
                     if 'file' in request.files:
                         f=request.files['file']
-                        image_url=photos.url(photos.save(f))
+                        image_url=photos.url(photos.save(f),name=secrets.token_hex(10) + ".")
                         print("ok")
                         g=[]
                         for cate in categories:
