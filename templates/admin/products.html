@@ -121,7 +121,7 @@
                             <td>{{product.name}}</td>
                             <td>{{product.price}}</td>
                             <td>
-                                <img class="img-fluid img-thumbnail" src="{{product.image}}" alt="{{product.name}}" >
+                                <img class="img-fluid img-thumbnail" src="{{ url_for('static', filename='images/'+product.image)}}" alt="{{product.name}}" >
                             </td>
                             <td>{{product.get_stock()}}</td>
                             {%for size in product.sizes%}
