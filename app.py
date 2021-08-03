@@ -11,9 +11,10 @@ import random
 from datetime import datetime
 
 from settings import app, db
-
+import os
 photos = UploadSet('photos', IMAGES)
 configure_uploads(app, photos)
+app.config['UPLOADED_FILES_DEST'] = os.getcwd()
 
 class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
