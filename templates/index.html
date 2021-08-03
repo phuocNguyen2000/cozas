@@ -474,7 +474,7 @@
 										<div class="wrap-slick3-arrows flex-sb-m flex-w"></div>
 
 										<div class="slick3 gallery-lb">
-											<div class="item-slick3" data-thumb="{{product.image}}">
+											<div class="item-slick3" data-thumb="{{ url_for('static', filename='images/'+product.image)}}">
 												<div class="wrap-pic-w pos-relative">
 													<img src="{{ url_for('static', filename='images/'+product.image)}}" alt="IMG-PRODUCT">
 
